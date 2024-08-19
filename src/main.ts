@@ -11,7 +11,7 @@ window.addEventListener("keyup", (ev) => {
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game')!
 const gameMap = new GameMap();
-const characterPos = { x: 1.5, y: 1.5 };
+const characterPos = { x: 2.5, y: 2.5 };
 
 const UNIT = 64;
 
@@ -76,18 +76,6 @@ function physics(dt: number, move: { x: number, y: number }) {
     bottom: newPos.y - 0.5,
   });
 
-  // apply map boundaries
-  if (bounds().left < 0) {
-    newPos.x = 0.5;
-  } else if (bounds().right > gameMap.width) {
-    newPos.x = gameMap.width - 0.5;
-  }
-  if (bounds().bottom < 0) {
-    newPos.y = 0.5;
-  } else if (bounds().top > gameMap.height) {
-    newPos.y = gameMap.height - 0.5;
-  }
-
   // Check if crossed X tile boundary
   if (Math.round(newPos.x) !== Math.round(characterPos.x) || (!!(bounds().left % 1) !== !!((characterPos.x - 0.5) % 1))) {
 
@@ -135,12 +123,8 @@ function physics(dt: number, move: { x: number, y: number }) {
 
   }
 
-  console.log((bounds().top % 1));
-
-
   characterPos.x = newPos.x;
   characterPos.y = newPos.y;
-  // console.log(characterPos);
 }
 
 function draw() {
@@ -151,8 +135,8 @@ function draw() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   // DRAW MAP
-  for (let r = 0; r < gameMap.height; r++) {
-    for (let c = 0; c < gameMap.width; c++) {
+  for (let r = 0; r < gameMap.tiles.length; r++) {
+    for (let c = 0; c < gameMap.tiles[r].length; c++) {
       gameMap.tiles[r][c].draw(ctx,
         (canvas.width - UNIT) / 2 + (c - characterPos.x + 0.5) * UNIT,
         (canvas.height - UNIT) / 2 + (r - characterPos.y + 0.5) * UNIT,
