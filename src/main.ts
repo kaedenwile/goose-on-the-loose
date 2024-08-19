@@ -1,6 +1,9 @@
 import './style.css'
 import { GameMap } from "./map.ts";
 
+import Map1Url from "./MAP1.txt";
+const Map1 = await (await fetch(Map1Url)).text();
+
 let keys: Record<string, boolean> = {};
 window.addEventListener("keydown", (ev) => {
   keys[ev.code] = true;
@@ -10,7 +13,7 @@ window.addEventListener("keyup", (ev) => {
 })
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game')!
-const gameMap = new GameMap();
+const gameMap = new GameMap(Map1);
 const characterPos = { x: 2.5, y: 2.5 };
 
 const UNIT = 64;

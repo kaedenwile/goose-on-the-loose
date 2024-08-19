@@ -45,6 +45,19 @@ class WaterTile implements Tile {
 
 }
 
+
+class DeepWaterTile implements Tile {
+
+  speed = SPEED / 2;
+  barrier = true;
+
+  draw(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) {
+    ctx.fillStyle = "#0033AA";
+    ctx.fillRect(x, y, width, height);
+  }
+
+}
+
 class StoneTile implements Tile {
 
   speed = SPEED;
@@ -60,22 +73,24 @@ class StoneTile implements Tile {
 const VOID = new VoidTile();
 const GRASS = new GrassTile();
 const WATER = new WaterTile();
+const DEEP = new DeepWaterTile();
 const STONE = new StoneTile();
 
 export class GameMap {
 
-  tiles: Tile[][] = [
-    [ GRASS, GRASS, GRASS, GRASS, STONE, STONE, WATER, WATER, GRASS, GRASS, GRASS ],
-    [ GRASS, GRASS, GRASS, GRASS, STONE, WATER, WATER, WATER, GRASS, GRASS, GRASS ],
-    [ GRASS, GRASS, GRASS, GRASS, GRASS, WATER, WATER, WATER, STONE, GRASS, GRASS ],
-    [ GRASS, STONE, GRASS, GRASS, GRASS, WATER, WATER, WATER, STONE, GRASS ],
-    [ GRASS, GRASS, GRASS, GRASS, STONE, WATER, WATER, WATER, STONE, GRASS ],
-    [ GRASS, GRASS, GRASS, GRASS, STONE, STONE, WATER, WATER, STONE, STONE ],
-    [ GRASS, GRASS, GRASS, GRASS, STONE, STONE, WATER, WATER, WATER, STONE ],
-    [ STONE, STONE, STONE, GRASS, STONE, STONE, WATER, WATER, WATER, STONE ],
-    [ GRASS, GRASS, GRASS, GRASS, STONE, STONE, WATER, WATER, WATER, VOID ],
-    [ GRASS, STONE, GRASS, GRASS, STONE, STONE, VOID, VOID, VOID, VOID ],
-  ]
+  tiles: Tile[][];
+
+  constructor(map: string) {
+    this.tiles = map.split("\n").map(row => row.split("").map(tile => ({
+      "G": GRASS,
+      "W": WATER,
+      "D": DEEP,
+      "S": STONE,
+      " ": VOID,
+    }[tile]! as Tile)));
+
+    console.log(map, this.tiles);
+  }
 
   tileAt(pos: {x : number, y: number}): Tile {
     return this.tiles[Math.floor(pos.y)]?.[Math.floor(pos.x)] ?? VOID;
