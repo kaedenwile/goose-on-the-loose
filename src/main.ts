@@ -1,10 +1,13 @@
 import './style.css'
-import { GameMap } from "./map.ts";
+import { DoorTile, GameMap } from "./map.ts";
 
-import MapUrl from "./MAP1.txt";
 import { FPS, framesByState, Goose, GooseDirection, GooseState } from "./goose.ts";
 
-const Map1 = await (await fetch(MapUrl)).text();
+const Maps = Object.fromEntries(await Promise.all([
+  "MAP1_1",
+  "MAP1_2",
+  "MAP1_3",
+].map(async (map) => [map, new GameMap(await (await fetch(`/levels/${map}.txt`)).text())])));
 
 let keys: Record<string, boolean> = {};
 let pressed: Record<string, boolean> = {};
@@ -17,10 +20,9 @@ window.addEventListener("keyup", (ev) => {
 })
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game')!
-const gameMap = new GameMap(Map1);
+let gameMap = Maps.MAP1_1;
+let characterPos = { x: gameMap.start.x + 0.5, y: gameMap.start.y + 0.5 };
 const goose = new Goose();
-
-const characterPos = { x: gameMap.start.x + 0.5, y: gameMap.start.y + 0.5 };
 
 const UNIT = 64;
 
@@ -91,11 +93,11 @@ function handleInput(timestamp: DOMHighResTimeStamp) {
 
 
 function physics(dt: number, move: { x: number, y: number }) {
-  const speed = gameMap.tileAt(characterPos)?.speed ?? 3;
+  const tile = gameMap.tileAt(characterPos);
 
   const newPos = {
-    x: characterPos.x + speed * move.x * dt,
-    y: characterPos.y + speed * move.y * dt,
+    x: characterPos.x + tile.speed * move.x * dt,
+    y: characterPos.y + tile.speed * move.y * dt,
   }
 
   const bounds = () => ({
@@ -162,6 +164,13 @@ function physics(dt: number, move: { x: number, y: number }) {
 
   characterPos.x = newPos.x;
   characterPos.y = newPos.y;
+
+  // Try and go through doors
+  if (tile instanceof DoorTile) {
+    const { mapId, at: {x, y} } = gameMap.doorPaths[tile.doorId]
+    gameMap = Maps[mapId];
+    characterPos = { x: x + 0.5, y: y + 0.5 };
+  }
 }
 
 function draw(timestamp: DOMHighResTimeStamp) {

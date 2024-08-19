@@ -33,8 +33,6 @@ export class Goose {
     const frames = framesByState[this.state];
     const currentFrame = frames[Math.floor(((timestamp - this.stateStart) / ( FPS))) % frames.length];
 
-    console.log(currentFrame, Math.floor(currentFrame / 2), (currentFrame % 2))
-
     ctx.save();
 
     if (this.facing === GooseDirection.Right) {
