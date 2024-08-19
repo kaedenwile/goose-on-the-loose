@@ -188,4 +188,6 @@ function draw(timestamp: DOMHighResTimeStamp) {
     UNIT + 24);
 }
 
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 requestAnimationFrame(gameLoop);
