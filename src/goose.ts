@@ -8,11 +8,11 @@ export enum GooseState {
 
 const framesByState = {
   [GooseState.Standing]: [0],
-  [GooseState.WalkingLeft]: [1,2,3,4,5,6,7],
-  [GooseState.WalkingRight]: [1,2,3,4,5,6,7],
-  [GooseState.Honking]: [7, 8, 9, 9, 8, 7, 7],
+  [GooseState.WalkingLeft]: [1,1,2,2,3,3,4,4,5,5,6,6,7,7],
+  [GooseState.WalkingRight]: [1,1,2,2,3,3,4,4,5,5,6,6,7,7],
+  [GooseState.Honking]: [8, 9, 9, 9, 8, 7, 7, 7],
 }
-const FPS = 150;
+const FPS = 75;
 
 export class Goose {
 
