@@ -14,7 +14,7 @@ window.addEventListener("keyup", (ev) => {
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game')!
 const gameMap = new GameMap(Map1);
-const characterPos = { x: 2.5, y: 2.5 };
+const characterPos = { x: gameMap.start.x + 0.5, y: gameMap.start.y + 0.5 };
 
 const UNIT = 64;
 
@@ -161,8 +161,15 @@ function draw() {
   }
 
   // DRAW CHARACTER
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillRect((canvas.width - UNIT) / 2, (canvas.height - UNIT) / 2, UNIT, UNIT);
+  ctx.drawImage(document.getElementById("goose")! as HTMLImageElement,
+    0,
+    0,
+    128,
+    128,
+    (canvas.width - UNIT) / 2 - 12,
+    (canvas.height - UNIT) / 2 - 12,
+    UNIT + 24,
+    UNIT + 24);
 }
 
 requestAnimationFrame(gameLoop);

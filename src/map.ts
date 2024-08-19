@@ -78,21 +78,26 @@ const STONE = new StoneTile();
 
 export class GameMap {
 
+  start: { x: number, y: number };
   tiles: Tile[][];
 
   constructor(map: string) {
-    this.tiles = map.split(/\r?\n/g).map(row => row.split("").map(tile => ({
-      "G": GRASS,
-      "W": WATER,
-      "D": DEEP,
-      "S": STONE,
-      " ": VOID,
-    }[tile]! as Tile)));
+    this.start = { x: 1, y: 1 };
 
-    console.log(map, this.tiles);
+    this.tiles = map.split(/\r?\n/g).map(((row, rowIdx) => row.split("").map(((tile, colIdx) => ({
+      "*": () => {
+        this.start = { x: colIdx, y: rowIdx };
+        return GRASS
+      },
+      "G": () => GRASS,
+      "W": () => WATER,
+      "D": () => DEEP,
+      "S": () => STONE,
+      " ": () => VOID,
+    }[tile]!() as Tile)))));
   }
 
-  tileAt(pos: {x : number, y: number}): Tile {
+  tileAt(pos: { x: number, y: number }): Tile {
     return this.tiles[Math.floor(pos.y)]?.[Math.floor(pos.x)] ?? VOID;
   }
 
