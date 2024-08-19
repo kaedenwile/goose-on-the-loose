@@ -2,6 +2,8 @@ import './style.css'
 import { GameMap } from "./map.ts";
 
 import Map1Url from "./MAP1.txt";
+import { Goose, GooseState } from "./goose.ts";
+
 const Map1 = await (await fetch(Map1Url)).text();
 
 let keys: Record<string, boolean> = {};
@@ -14,6 +16,8 @@ window.addEventListener("keyup", (ev) => {
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game')!
 const gameMap = new GameMap(Map1);
+const goose = new Goose();
+
 const characterPos = { x: gameMap.start.x + 0.5, y: gameMap.start.y + 0.5 };
 
 const UNIT = 64;
@@ -27,15 +31,15 @@ function gameLoop(timestamp: DOMHighResTimeStamp) {
 
   const dt = (lastTimestamp - timestamp) / 1000;
 
-  const move = handleInput();
+  const move = handleInput(timestamp);
   physics(dt, move);
-  draw();
+  draw(timestamp);
   lastTimestamp = timestamp;
 
   requestAnimationFrame(gameLoop);
 }
 
-function handleInput() {
+function handleInput(timestamp: DOMHighResTimeStamp) {
   const direction = { x: 0, y: 0 };
 
   if (keys["KeyW"]) {
@@ -58,6 +62,16 @@ function handleInput() {
   if (direction.x !== 0 && direction.y !== 0) {
     direction.x *= Math.SQRT1_2;
     direction.y *= Math.SQRT1_2;
+  }
+
+  if (keys["Space"]) {
+    goose.setState(GooseState.Honking, timestamp);
+  } else if (direction.x > 0) {
+    goose.setState(GooseState.WalkingRight, timestamp);
+  } else if (direction.x < 0) {
+    goose.setState(GooseState.WalkingLeft, timestamp);
+  } else {
+    goose.setState(GooseState.Standing, timestamp);
   }
 
   return direction;
@@ -87,7 +101,6 @@ function physics(dt: number, move: { x: number, y: number }) {
       // if hit barrier
       if (gameMap.tileAt({ x: bounds().right, y: characterPos.y - 0.5 })?.barrier
         || (((characterPos.y + 0.5) % 1) && gameMap.tileAt({ x: bounds().right, y: characterPos.y + 0.5 })?.barrier)) {
-        console.log("HIT R", Math.ceil(characterPos.x));
         newPos.x = Math.ceil(characterPos.x) - 0.5;
       }
     }
@@ -96,7 +109,6 @@ function physics(dt: number, move: { x: number, y: number }) {
     else {
       if (gameMap.tileAt({ x: bounds().left, y: characterPos.y - 0.5 })?.barrier
         || (((characterPos.y + 0.5) % 1) && gameMap.tileAt({ x: bounds().left, y: characterPos.y + 0.5 })?.barrier)) {
-        console.log("HIT L", Math.ceil(characterPos.x));
         newPos.x = Math.floor(characterPos.x) + 0.5;
       }
     }
@@ -111,7 +123,6 @@ function physics(dt: number, move: { x: number, y: number }) {
       // if hit barrier
       if (gameMap.tileAt({ x: bounds().left, y: bounds().top })?.barrier
         || ((bounds().right % 1) && gameMap.tileAt({ x: bounds().right, y: bounds().top })?.barrier)) {
-        console.log("HIT B");
         newPos.y = Math.ceil(characterPos.y) - 0.5;
       }
     }
@@ -119,7 +130,6 @@ function physics(dt: number, move: { x: number, y: number }) {
     else {
       if (gameMap.tileAt({ x: bounds().left, y: bounds().bottom })?.barrier
         || ((bounds().right % 1) && gameMap.tileAt({ x: bounds().right, y: bounds().bottom })?.barrier)) {
-        console.log("HIT T");
         newPos.y = Math.floor(characterPos.y) + 0.5;
       }
     }
@@ -137,13 +147,12 @@ function physics(dt: number, move: { x: number, y: number }) {
   } else if ((newPos.y > characterPos.y) && (newPos.y - 0.5) % 1 > 0.99) {
     newPos.y += 1 - ((newPos.y - 0.5) % 1);
   }
-  console.log(newPos);
 
   characterPos.x = newPos.x;
   characterPos.y = newPos.y;
 }
 
-function draw() {
+function draw(timestamp: DOMHighResTimeStamp) {
   const ctx = canvas.getContext("2d")!;
 
   // FILL BG
@@ -161,12 +170,7 @@ function draw() {
   }
 
   // DRAW CHARACTER
-  ctx.drawImage(document.getElementById("goose")! as HTMLImageElement,
-    0,
-    0,
-    128,
-    128,
-    (canvas.width - UNIT) / 2 - 12,
+  goose.draw(ctx, timestamp, (canvas.width - UNIT) / 2 - 12,
     (canvas.height - UNIT) / 2 - 12,
     UNIT + 24,
     UNIT + 24);
