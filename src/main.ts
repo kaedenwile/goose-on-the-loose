@@ -1,13 +1,15 @@
 import './style.css'
 import { GameMap } from "./map.ts";
 
-import Map1Url from "./MAP1.txt";
-import { Goose, GooseState } from "./goose.ts";
+import MapUrl from "./MAP1.txt";
+import { FPS, framesByState, Goose, GooseDirection, GooseState } from "./goose.ts";
 
-const Map1 = await (await fetch(Map1Url)).text();
+const Map1 = await (await fetch(MapUrl)).text();
 
 let keys: Record<string, boolean> = {};
+let pressed: Record<string, boolean> = {};
 window.addEventListener("keydown", (ev) => {
+  if (!keys[ev.code]) pressed[ev.code] = true;
   keys[ev.code] = true;
 })
 window.addEventListener("keyup", (ev) => {
@@ -64,16 +66,26 @@ function handleInput(timestamp: DOMHighResTimeStamp) {
     direction.y *= Math.SQRT1_2;
   }
 
-  if (keys["Space"]) {
-    goose.setState(GooseState.Honking, timestamp);
-  } else if (direction.x > 0) {
-    goose.setState(GooseState.WalkingRight, timestamp);
+  if (direction.x > 0) {
+    goose.facing = GooseDirection.Left;
   } else if (direction.x < 0) {
-    goose.setState(GooseState.WalkingLeft, timestamp);
+    goose.facing = GooseDirection.Right;
+  }
+
+  if (pressed["Space"]) {
+    goose.setState(GooseState.Honking, timestamp, true);
+    direction.x = 0;
+    direction.y = 0;
+  } else if (goose.state === GooseState.Honking && timestamp - goose.stateStart < FPS * framesByState[GooseState.Honking].length) {
+    direction.x = 0;
+    direction.y = 0;
+  } else if (direction.x || direction.y) {
+    goose.setState(GooseState.Walking, timestamp);
   } else {
     goose.setState(GooseState.Standing, timestamp);
   }
 
+  pressed = {};
   return direction;
 }
 

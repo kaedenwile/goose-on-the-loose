@@ -1,26 +1,29 @@
+export enum GooseDirection {
+  Left,
+  Right
+}
 
 export enum GooseState {
   Standing,
-  WalkingLeft,
-  WalkingRight,
+  Walking,
   Honking
 }
-
-const framesByState = {
+export const framesByState = {
   [GooseState.Standing]: [0],
-  [GooseState.WalkingLeft]: [1,1,2,2,3,3,4,4,5,5,6,6,7,7],
-  [GooseState.WalkingRight]: [1,1,2,2,3,3,4,4,5,5,6,6,7,7],
-  [GooseState.Honking]: [8, 9, 9, 9, 8, 7, 7, 7],
+  [GooseState.Walking]: [1,1,2,2,3,3,4,4,5,5,6,6,7,7],
+  [GooseState.Honking]: [8, 9, 9, 9, 8],
 }
-const FPS = 75;
+export const FPS = 75;
 
 export class Goose {
 
   state: GooseState = GooseState.Standing;
   stateStart: number = 0;
 
-  setState(state: GooseState, timestamp: DOMHighResTimeStamp) {
-    if (this.state === state) return;
+  facing: GooseDirection = GooseDirection.Left;
+
+  setState(state: GooseState, timestamp: DOMHighResTimeStamp, override = false) {
+    if (!override && this.state === state) return;
 
     this.state = state;
     this.stateStart = timestamp;
@@ -32,6 +35,14 @@ export class Goose {
 
     console.log(currentFrame, Math.floor(currentFrame / 2), (currentFrame % 2))
 
+    ctx.save();
+
+    if (this.facing === GooseDirection.Right) {
+      ctx.scale(-1, 1);
+      width *= -1;
+      x *= -1;
+    }
+
     ctx.drawImage(document.getElementById("goose")! as HTMLImageElement,
       128 * (currentFrame % 2),
       128 * Math.floor(currentFrame / 2),
@@ -42,6 +53,8 @@ export class Goose {
       width,
       height
     );
+
+    ctx.restore();
   }
 
 }
