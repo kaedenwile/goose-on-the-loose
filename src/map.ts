@@ -81,7 +81,7 @@ export class GameMap {
   tiles: Tile[][];
 
   constructor(map: string) {
-    this.tiles = map.split("\n").map(row => row.split("").map(tile => ({
+    this.tiles = map.split(/\r?\n/g).map(row => row.split("").map(tile => ({
       "G": GRASS,
       "W": WATER,
       "D": DEEP,

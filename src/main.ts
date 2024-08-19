@@ -123,8 +123,21 @@ function physics(dt: number, move: { x: number, y: number }) {
         newPos.y = Math.floor(characterPos.y) + 0.5;
       }
     }
-
   }
+
+  // round on boundaries
+  if ((newPos.x < characterPos.x) && (newPos.x - 0.5) % 1 < 0.01) {
+    newPos.x -= ((newPos.x - 0.5) % 1);
+  } else if ((newPos.x > characterPos.x) && (newPos.x - 0.5) % 1 > 0.99) {
+    newPos.x += 1 - ((newPos.x - 0.5) % 1);
+  }
+
+  if ((newPos.y < characterPos.y) && (newPos.y - 0.5) % 1 < 0.01) {
+    newPos.y -= ((newPos.y - 0.5) % 1);
+  } else if ((newPos.y > characterPos.y) && (newPos.y - 0.5) % 1 > 0.99) {
+    newPos.y += 1 - ((newPos.y - 0.5) % 1);
+  }
+  console.log(newPos);
 
   characterPos.x = newPos.x;
   characterPos.y = newPos.y;
@@ -141,8 +154,8 @@ function draw() {
   for (let r = 0; r < gameMap.tiles.length; r++) {
     for (let c = 0; c < gameMap.tiles[r].length; c++) {
       gameMap.tiles[r][c].draw(ctx,
-        (canvas.width - UNIT) / 2 + (c - characterPos.x + 0.5) * UNIT,
-        (canvas.height - UNIT) / 2 + (r - characterPos.y + 0.5) * UNIT,
+        Math.round((canvas.width - UNIT) / 2 + (c - characterPos.x + 0.5) * UNIT),
+        Math.round((canvas.height - UNIT) / 2 + (r - characterPos.y + 0.5) * UNIT),
         UNIT, UNIT);
     }
   }
