@@ -24,13 +24,11 @@ window.addEventListener("keyup", (ev) => {
 })
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game')!
-let gameMap = Maps.MAP2;
+// let gameMap: GameMap = Maps.MAP2;
+let gameMap: GameMap = Maps.MAP1_1;
 let characterPos = { x: gameMap.start.x + 0.5, y: gameMap.start.y + 0.5 };
 const goose = new Goose();
-const dudes = [
-  new Dude(0, {x: 5, y: 2}),
-  new Dude(1, {x: 2, y: 5}),
-]
+let  dudes = gameMap.dudeSpawns.map(pos => new Dude(Math.floor(Math.random() * 2) as 0 | 1, pos))
 
 let lastTimestamp: DOMHighResTimeStamp = 0;
 function gameLoop(timestamp: DOMHighResTimeStamp) {
@@ -85,6 +83,7 @@ function handleInput(timestamp: DOMHighResTimeStamp) {
     goose.setState(GooseState.HonkingStart, timestamp, true);
     direction.x = 0;
     direction.y = 0;
+    dudes.forEach(dude => dude.flee(characterPos));
   } else if ([GooseState.HonkingStart, GooseState.Honking, GooseState.HonkingEnd].includes(goose.state)) {
     direction.x = 0;
     direction.y = 0;
@@ -119,6 +118,7 @@ function physics(dt: number, move: { x: number, y: number }) {
     const { mapId, at: {x, y} } = gameMap.doorPaths[tile.doorId]
     gameMap = Maps[mapId];
     characterPos = { x: x + 0.5, y: y + 0.5 };
+    dudes = gameMap.dudeSpawns.map(pos => new Dude(Math.floor(Math.random() * 2) as 0 | 1, pos))
   }
 }
 
@@ -146,7 +146,7 @@ function draw(timestamp: DOMHighResTimeStamp) {
 
   // DRAW DUDES THAT ARE BEHIND
   dudes
-    .filter(dude => dude.position.y + 0.66 < characterPos.y)
+    .filter(dude => dude.position.y + 0.5 < characterPos.y)
     .forEach(dude => dude.draw(ctx, offset));
 
   // DRAW CHARACTER
@@ -154,7 +154,7 @@ function draw(timestamp: DOMHighResTimeStamp) {
 
   // DRAW DUDES THAT ARE IN FRONT
   dudes
-    .filter(dude => dude.position.y + 0.66 >= characterPos.y)
+    .filter(dude => dude.position.y + 0.5 >= characterPos.y)
     .forEach(dude => dude.draw(ctx, offset));
 }
 

@@ -109,6 +109,7 @@ const STONE = new StoneTile();
 
 const charMap: Record<string, Tile> = {
   "*": GRASS,
+  "$": GRASS,
   "G": GRASS,
   "W": WATER,
   "D": DEEP,
@@ -125,6 +126,7 @@ export class GameMap {
     mapId: string,
     at: { x: number, y: number }
   }};
+  dudeSpawns: {x: number, y: number}[] = [];
 
   constructor(file: string) {
     this.start = { x: 1, y: 1 };
@@ -136,6 +138,8 @@ export class GameMap {
         return new DoorTile(tile);
       } else if (tile === "*") {
         this.start = { x: colIdx, y: rowIdx };
+      } else if (tile === "$") {
+        this.dudeSpawns.push({x: colIdx, y: rowIdx});
       }
 
       if (!charMap[tile]) {

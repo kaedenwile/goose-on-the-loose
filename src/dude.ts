@@ -2,8 +2,6 @@ import { UNIT } from "./const.ts";
 import { doPhysics } from "./physics.ts";
 import { GameMap } from "./map.ts";
 
-
-
 export class Dude {
 
   dudeType: number;
@@ -19,11 +17,19 @@ export class Dude {
     this.position = position;
   }
 
+  flee(goosePosition: {x: number, y: number}) {
+    this.action = {
+      direction: Math.atan2(this.position.y - goosePosition.y, this.position.x - goosePosition.x),
+      speed: 2,
+      cooldown: 2,
+    }
+  }
+
   step(gameMap: GameMap, dt: number) {
     if (!this.action || this.action.cooldown < 0) {
       this.action = {
         direction: 2 * Math.PI * Math.random(),
-        speed: (Math.random() > 0.5) ? 0 : 0.6 * Math.random(),
+        speed: (Math.random() > 0.75) ? 0 : 0.6 * Math.random(),
         cooldown: 0.5 + 2 * Math.random(),
       }
     }
