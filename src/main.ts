@@ -2,6 +2,7 @@ import './style.css'
 import { DoorTile, GameMap } from "./map.ts";
 
 import { FPS, framesByState, Goose, GooseDirection, GooseState } from "./goose.ts";
+import { Dude } from "./dude.ts";
 
 const Maps = Object.fromEntries(await Promise.all([
   "MAP1_1",
@@ -21,9 +22,13 @@ window.addEventListener("keyup", (ev) => {
 })
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game')!
-let gameMap = Maps.MAP1_1;
+let gameMap = Maps.MAP2;
 let characterPos = { x: gameMap.start.x + 0.5, y: gameMap.start.y + 0.5 };
 const goose = new Goose();
+const dudes = [
+  new Dude(0, {x: 5, y: 2}),
+  new Dude(1, {x: 2, y: 5}),
+]
 
 const UNIT = 64;
 
@@ -189,15 +194,27 @@ function draw(timestamp: DOMHighResTimeStamp) {
   ctx.fillStyle = "#000000";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  const offset = {
+    x: (canvas.width - UNIT) / 2 - (characterPos.x - 0.5) * UNIT,
+    y: (canvas.height - UNIT) / 2 - (characterPos.y - 0.5) * UNIT,
+  }
+
   // DRAW MAP
   for (let r = 0; r < gameMap.tiles.length; r++) {
     for (let c = 0; c < gameMap.tiles[r].length; c++) {
       gameMap.tiles[r][c].draw(ctx,
-        Math.round((canvas.width - UNIT) / 2 + (c - characterPos.x + 0.5) * UNIT),
-        Math.round((canvas.height - UNIT) / 2 + (r - characterPos.y + 0.5) * UNIT),
+        Math.round(offset.x + c * UNIT),
+        Math.round(offset.y + r * UNIT),
         UNIT, UNIT);
     }
   }
+
+  // DRAW DUDES
+  dudes.forEach(dude => dude.draw(ctx,
+    offset.x + dude.position.x * UNIT - 16,
+    offset.y + dude.position.y * UNIT - 16,
+    UNIT + 32,
+    UNIT + 32));
 
   // DRAW CHARACTER
   goose.draw(ctx, timestamp, (canvas.width - UNIT) / 2 - 12,
