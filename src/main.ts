@@ -75,12 +75,20 @@ function handleInput(timestamp: DOMHighResTimeStamp) {
   }
 
   if (pressed["Space"]) {
-    goose.setState(GooseState.Honking, timestamp, true);
+    goose.setState(GooseState.HonkingStart, timestamp, true);
     direction.x = 0;
     direction.y = 0;
-  } else if (goose.state === GooseState.Honking && timestamp - goose.stateStart < FPS * framesByState[GooseState.Honking].length) {
+  } else if ([GooseState.HonkingStart, GooseState.Honking, GooseState.HonkingEnd].includes(goose.state)) {
     direction.x = 0;
     direction.y = 0;
+
+    if (goose.state === GooseState.HonkingStart && timestamp - goose.stateStart > FPS * framesByState[GooseState.HonkingStart].length) {
+      goose.setState(GooseState.Honking, timestamp);
+    } else if (goose.state === GooseState.Honking && !keys["Space"]) {
+      goose.setState(GooseState.HonkingEnd, timestamp);
+    } else if (goose.state === GooseState.HonkingEnd && timestamp - goose.stateStart > FPS * framesByState[GooseState.HonkingEnd].length) {
+      goose.setState(GooseState.Standing, timestamp);
+    }
   } else if (direction.x || direction.y) {
     goose.setState(GooseState.Walking, timestamp);
   } else {
