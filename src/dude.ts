@@ -7,6 +7,7 @@ export class Dude {
   dudeType: number;
   position: {x: number, y: number};
   action?: {
+    fleeing: boolean;
     direction: number;
     speed: number;
     cooldown: number;
@@ -19,6 +20,7 @@ export class Dude {
 
   flee(goosePosition: {x: number, y: number}) {
     this.action = {
+      fleeing: true,
       direction: Math.atan2(this.position.y - goosePosition.y, this.position.x - goosePosition.x),
       speed: 2,
       cooldown: 2,
@@ -28,6 +30,7 @@ export class Dude {
   step(gameMap: GameMap, dt: number) {
     if (!this.action || this.action.cooldown < 0) {
       this.action = {
+        fleeing: false,
         direction: 2 * Math.PI * Math.random(),
         speed: (Math.random() > 0.75) ? 0 : 0.6 * Math.random(),
         cooldown: 0.5 + 2 * Math.random(),
@@ -50,6 +53,19 @@ export class Dude {
   draw(ctx: CanvasRenderingContext2D, offset: {x: number, y: number}) {
     // ctx.fillStyle = "#FF7788";
     // ctx.fillRect(offset.x + this.position.x * UNIT, offset.y + this.position.y * UNIT, UNIT, UNIT);
+
+    if (this.action?.fleeing) {
+      ctx.drawImage(document.getElementById("egads")! as HTMLImageElement,
+        0,
+        0,
+        64,
+        64,
+        offset.x + this.position.x * UNIT + 6,
+        offset.y + (this.position.y - 2) * UNIT + 4,
+        UNIT,
+        UNIT,
+      );
+    }
 
     ctx.drawImage(document.getElementById("dude")! as HTMLImageElement,
       0,
