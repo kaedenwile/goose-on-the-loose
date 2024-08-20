@@ -9,6 +9,18 @@ export interface Tile {
 
 }
 
+class EasterEggTile implements Tile {
+
+  speed = SPEED * 2;
+  barrier = false;
+
+  draw(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(x, y, width, height);
+  }
+
+}
+
 class VoidTile implements Tile {
 
   speed = SPEED;
@@ -89,6 +101,7 @@ export class DoorTile implements Tile {
 
 
 const VOID = new VoidTile();
+const EGG = new EasterEggTile();
 const GRASS = new GrassTile();
 const WATER = new WaterTile();
 const DEEP = new DeepWaterTile();
@@ -101,6 +114,7 @@ const charMap: Record<string, Tile> = {
   "D": DEEP,
   "S": STONE,
   " ": VOID,
+  "`": EGG,
 } as const;
 
 export class GameMap {

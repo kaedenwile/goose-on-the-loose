@@ -7,6 +7,7 @@ const Maps = Object.fromEntries(await Promise.all([
   "MAP1_1",
   "MAP1_2",
   "MAP1_3",
+  "MAP2",
 ].map(async (map) => [map, new GameMap(await (await fetch(`/levels/${map}.txt`)).text())])));
 
 let keys: Record<string, boolean> = {};
@@ -82,11 +83,11 @@ function handleInput(timestamp: DOMHighResTimeStamp) {
     direction.x = 0;
     direction.y = 0;
 
-    if (goose.state === GooseState.HonkingStart && timestamp - goose.stateStart > FPS * framesByState[GooseState.HonkingStart].length) {
+    if (goose.state === GooseState.HonkingStart && timestamp - goose.stateStart > FPS * framesByState[GooseState.HonkingStart].length - 1) {
       goose.setState(GooseState.Honking, timestamp);
     } else if (goose.state === GooseState.Honking && !keys["Space"]) {
       goose.setState(GooseState.HonkingEnd, timestamp);
-    } else if (goose.state === GooseState.HonkingEnd && timestamp - goose.stateStart > FPS * framesByState[GooseState.HonkingEnd].length) {
+    } else if (goose.state === GooseState.HonkingEnd && timestamp - goose.stateStart > FPS * framesByState[GooseState.HonkingEnd].length - 1) {
       goose.setState(GooseState.Standing, timestamp);
     }
   } else if (direction.x || direction.y) {
