@@ -1,3 +1,5 @@
+import { UNIT } from "./const.ts";
+
 export enum GooseDirection {
   Left,
   Right
@@ -33,27 +35,35 @@ export class Goose {
     this.stateStart = timestamp;
   }
 
-  draw(ctx: CanvasRenderingContext2D, timestamp: DOMHighResTimeStamp, x: number, y: number, width: number, height: number) {
+  draw(ctx: CanvasRenderingContext2D, timestamp: DOMHighResTimeStamp, canvasSize: { width: number, height: number }) {
     const frames = framesByState[this.state];
     const currentFrame = frames[Math.floor(((timestamp - this.stateStart) / ( FPS))) % frames.length];
 
     ctx.save();
 
+    let flipX = false;
+
+
     if (this.facing === GooseDirection.Right) {
       ctx.scale(-1, 1);
-      width *= -1;
-      x *= -1;
+      flipX = true
     }
 
     ctx.drawImage(document.getElementById("goose")! as HTMLImageElement,
+      // source x
       128 * (currentFrame % 2),
+      // source y
       128 * Math.floor(currentFrame / 2),
-      128,
-      128,
-      x,
-      y,
-      width,
-      height
+      // source width,height
+      128, 128,
+      // destination x
+      (flipX ? -1 : 1) * ((canvasSize.width - UNIT) / 2 - 12),
+      // destination y
+      (canvasSize.height - UNIT) / 2 - 12,
+      // destination width
+      (flipX ? -1 : 1) * (UNIT + 24),
+      // destination height
+      UNIT + 24
     );
 
     ctx.restore();

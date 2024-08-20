@@ -3,6 +3,8 @@ import { DoorTile, GameMap } from "./map.ts";
 
 import { FPS, framesByState, Goose, GooseDirection, GooseState } from "./goose.ts";
 import { Dude } from "./dude.ts";
+import { UNIT } from "./const.ts";
+import { doPhysics } from "./physics.ts";
 
 const Maps = Object.fromEntries(await Promise.all([
   "MAP1_1",
@@ -30,16 +32,15 @@ const dudes = [
   new Dude(1, {x: 2, y: 5}),
 ]
 
-const UNIT = 64;
-
 let lastTimestamp: DOMHighResTimeStamp = 0;
-
 function gameLoop(timestamp: DOMHighResTimeStamp) {
   if (!timestamp) {
     lastTimestamp = timestamp;
   }
 
-  const dt = (lastTimestamp - timestamp) / 1000;
+  const dt = (timestamp - lastTimestamp) / 1000;
+
+  dudes.forEach(dude => dude.step(gameMap, dt));
 
   const move = handleInput(timestamp);
   physics(dt, move);
@@ -53,19 +54,19 @@ function handleInput(timestamp: DOMHighResTimeStamp) {
   const direction = { x: 0, y: 0 };
 
   if (keys["KeyW"]) {
-    direction.y += 1;
-  }
-
-  if (keys["KeyS"]) {
     direction.y -= 1;
   }
 
+  if (keys["KeyS"]) {
+    direction.y += 1;
+  }
+
   if (keys["KeyA"]) {
-    direction.x += 1;
+    direction.x -= 1;
   }
 
   if (keys["KeyD"]) {
-    direction.x -= 1;
+    direction.x += 1;
   }
 
   // normalize direction
@@ -74,9 +75,9 @@ function handleInput(timestamp: DOMHighResTimeStamp) {
     direction.y *= Math.SQRT1_2;
   }
 
-  if (direction.x > 0) {
+  if (direction.x < 0) {
     goose.facing = GooseDirection.Left;
-  } else if (direction.x < 0) {
+  } else if (direction.x > 0) {
     goose.facing = GooseDirection.Right;
   }
 
@@ -108,73 +109,7 @@ function handleInput(timestamp: DOMHighResTimeStamp) {
 
 function physics(dt: number, move: { x: number, y: number }) {
   const tile = gameMap.tileAt(characterPos);
-
-  const newPos = {
-    x: characterPos.x + tile.speed * move.x * dt,
-    y: characterPos.y + tile.speed * move.y * dt,
-  }
-
-  const bounds = () => ({
-    left: newPos.x - 0.5,
-    right: newPos.x + 0.5,
-    top: newPos.y + 0.5,
-    bottom: newPos.y - 0.5,
-  });
-
-  // Check if crossed X tile boundary
-  if (Math.round(newPos.x) !== Math.round(characterPos.x) || (!!(bounds().left % 1) !== !!((characterPos.x - 0.5) % 1))) {
-
-    // if moved right
-    if (newPos.x > characterPos.x) {
-      // if hit barrier
-      if (gameMap.tileAt({ x: bounds().right, y: characterPos.y - 0.5 })?.barrier
-        || (((characterPos.y + 0.5) % 1) && gameMap.tileAt({ x: bounds().right, y: characterPos.y + 0.5 })?.barrier)) {
-        newPos.x = Math.ceil(characterPos.x) - 0.5;
-      }
-    }
-
-    // if moved left
-    else {
-      if (gameMap.tileAt({ x: bounds().left, y: characterPos.y - 0.5 })?.barrier
-        || (((characterPos.y + 0.5) % 1) && gameMap.tileAt({ x: bounds().left, y: characterPos.y + 0.5 })?.barrier)) {
-        newPos.x = Math.floor(characterPos.x) + 0.5;
-      }
-    }
-  }
-
-  // Check if crossed Y tile boundary
-  if (Math.floor(bounds().bottom) !== Math.floor(characterPos.y - 0.5) ||
-    (!!(bounds().bottom % 1) !== !!((characterPos.y - 0.5) % 1))) {
-
-    // if moved down
-    if (newPos.y > characterPos.y) {
-      // if hit barrier
-      if (gameMap.tileAt({ x: bounds().left, y: bounds().top })?.barrier
-        || ((bounds().right % 1) && gameMap.tileAt({ x: bounds().right, y: bounds().top })?.barrier)) {
-        newPos.y = Math.ceil(characterPos.y) - 0.5;
-      }
-    }
-    // if moved up
-    else {
-      if (gameMap.tileAt({ x: bounds().left, y: bounds().bottom })?.barrier
-        || ((bounds().right % 1) && gameMap.tileAt({ x: bounds().right, y: bounds().bottom })?.barrier)) {
-        newPos.y = Math.floor(characterPos.y) + 0.5;
-      }
-    }
-  }
-
-  // round on boundaries
-  if ((newPos.x < characterPos.x) && (newPos.x - 0.5) % 1 < 0.01) {
-    newPos.x -= ((newPos.x - 0.5) % 1);
-  } else if ((newPos.x > characterPos.x) && (newPos.x - 0.5) % 1 > 0.99) {
-    newPos.x += 1 - ((newPos.x - 0.5) % 1);
-  }
-
-  if ((newPos.y < characterPos.y) && (newPos.y - 0.5) % 1 < 0.01) {
-    newPos.y -= ((newPos.y - 0.5) % 1);
-  } else if ((newPos.y > characterPos.y) && (newPos.y - 0.5) % 1 > 0.99) {
-    newPos.y += 1 - ((newPos.y - 0.5) % 1);
-  }
+  const newPos = doPhysics(gameMap, dt, characterPos, move);
 
   characterPos.x = newPos.x;
   characterPos.y = newPos.y;
@@ -209,18 +144,18 @@ function draw(timestamp: DOMHighResTimeStamp) {
     }
   }
 
-  // DRAW DUDES
-  dudes.forEach(dude => dude.draw(ctx,
-    offset.x + dude.position.x * UNIT - 16,
-    offset.y + dude.position.y * UNIT - 16,
-    UNIT + 32,
-    UNIT + 32));
+  // DRAW DUDES THAT ARE BEHIND
+  dudes
+    .filter(dude => dude.position.y + 0.66 < characterPos.y)
+    .forEach(dude => dude.draw(ctx, offset));
 
   // DRAW CHARACTER
-  goose.draw(ctx, timestamp, (canvas.width - UNIT) / 2 - 12,
-    (canvas.height - UNIT) / 2 - 12,
-    UNIT + 24,
-    UNIT + 24);
+  goose.draw(ctx, timestamp, canvas);
+
+  // DRAW DUDES THAT ARE IN FRONT
+  dudes
+    .filter(dude => dude.position.y + 0.66 >= characterPos.y)
+    .forEach(dude => dude.draw(ctx, offset));
 }
 
 canvas.width = window.innerWidth;
